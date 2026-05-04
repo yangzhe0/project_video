@@ -1,0 +1,33 @@
+{
+  "paths": {
+    "input_dir": "D:\\static",
+    "output_dir": "D:\\static",
+    "thumbnail_dir": "D:\\static"
+  },
+  "ffmpeg": {
+    "executable": "./FFmpeg/ffmpeg.exe",
+    "probe_executable": "./FFmpeg/ffprobe.exe"
+  },
+  "thumbnail": {
+    "canvas_width": 960,
+    "canvas_height": 540,
+    "landscape_frames": 4,
+    "portrait_frames": 3,
+    "font_size": 50,
+    "text_color": [
+      0,
+      0,
+      0
+    ],
+    "background_color": [
+      255,
+      255,
+      255
+    ],
+    "show_info_header": false
+  },
+  "processing": {
+    "max_workers": 8,
+    "show_progress": true
+  }
+}
