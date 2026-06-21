@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --bg: #f4fbfc;
   --panel: rgba(255, 255, 255, 0.76);
   --panel-strong: #ffffff;
@@ -13,6 +13,22 @@
   --shadow-soft: 0 4px 12px rgba(56, 115, 124, 0.06);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #080e10;
+    --panel: rgba(18, 28, 32, 0.92);
+    --panel-strong: #172429;
+    --line: rgba(223, 248, 251, 0.2);
+    --text: #f5fbfc;
+    --muted: #bdd1d6;
+    --accent: #76f0f7;
+    --accent-soft: rgba(118, 240, 247, 0.18);
+    --danger: #ff8b8b;
+    --shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+    --shadow-soft: 0 5px 14px rgba(0, 0, 0, 0.26);
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -23,6 +39,12 @@ body {
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text);
   background: linear-gradient(180deg, #fbfeff 0%, var(--bg) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(180deg, #05090a 0%, var(--bg) 100%);
+  }
 }
 
 button,
@@ -75,6 +97,13 @@ select {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
 }
 
+@media (prefers-color-scheme: dark) {
+  .search-chip {
+    background: rgba(8, 16, 19, 0.98);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  }
+}
+
 .search-chip input {
   width: 100%;
   min-width: 0;
@@ -113,6 +142,13 @@ select {
   box-shadow: var(--shadow-soft);
 }
 
+@media (prefers-color-scheme: dark) {
+  .video-card {
+    border-color: rgba(223, 248, 251, 0.2);
+    background: rgba(20, 31, 35, 0.98);
+  }
+}
+
 .poster-button {
   position: relative;
   display: block;
@@ -123,6 +159,12 @@ select {
   background: linear-gradient(180deg, #d9e9eb 0%, #c6dde0 100%);
   cursor: pointer;
   isolation: isolate;
+}
+
+@media (prefers-color-scheme: dark) {
+  .poster-button {
+    background: linear-gradient(180deg, #203237 0%, #101b1f 100%);
+  }
 }
 
 .poster-button.has-poster::before {
@@ -160,6 +202,13 @@ select {
   z-index: 1;
 }
 
+@media (prefers-color-scheme: dark) {
+  .poster-fallback {
+    color: rgba(245, 251, 252, 0.72);
+    background: linear-gradient(180deg, #203237 0%, #101b1f 100%);
+  }
+}
+
 .card-body {
   padding: 6px 8px;
 }
@@ -182,6 +231,7 @@ select {
   margin: 0;
   border: 0;
   background: transparent;
+  color: inherit;
   text-align: left;
   cursor: pointer;
   min-width: 0;
@@ -197,6 +247,13 @@ select {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  .title-button,
+  .card-title {
+    color: #ffffff;
+  }
 }
 
 .card-meta-inline {
@@ -222,6 +279,12 @@ select {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  .meta-chip {
+    color: #d5e6ea;
+  }
 }
 
 .card-tools {
@@ -258,6 +321,14 @@ select {
   color: #075d66;
 }
 
+@media (prefers-color-scheme: dark) {
+  .tag-edit-button {
+    border-color: rgba(173, 251, 255, 0.76);
+    background: rgba(173, 251, 255, 0.28);
+    color: #f1feff;
+  }
+}
+
 .tag-edit-button:active {
   transform: translateY(1px);
 }
@@ -277,6 +348,15 @@ select {
 .icon-button {
   background: rgba(255, 255, 255, 0.92);
   color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chip,
+  .primary-button,
+  .text-button,
+  .icon-button {
+    background: rgba(10, 19, 22, 0.98);
+  }
 }
 
 .chip {
@@ -300,12 +380,31 @@ select {
   font-weight: 700;
 }
 
+@media (prefers-color-scheme: dark) {
+  .chip-name {
+    color: #c9fbff;
+  }
+
+  .chip-count {
+    color: #ffffff;
+  }
+}
+
 .chip.active,
 .primary-button {
   background: #ffffff;
   color: var(--accent);
   border-color: rgba(15, 149, 161, 0.2);
   box-shadow: 0 8px 20px rgba(15, 149, 161, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chip.active,
+  .primary-button {
+    background: #183338;
+    border-color: rgba(118, 240, 247, 0.5);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+  }
 }
 
 .text-button {
@@ -319,6 +418,20 @@ select {
   border-color: rgba(205, 85, 85, 0.48);
   background: #ffe9e9;
   color: #b42318;
+}
+
+@media (prefers-color-scheme: dark) {
+  .text-button {
+    border-color: rgba(174, 205, 255, 0.78);
+    background: rgba(93, 137, 224, 0.42);
+    color: #f0f6ff;
+  }
+
+  .text-button.danger {
+    border-color: rgba(255, 151, 151, 0.64);
+    background: rgba(186, 60, 60, 0.34);
+    color: #ffe0e0;
+  }
 }
 
 .chip-action:disabled {
@@ -365,6 +478,12 @@ select {
 .player-dialog::backdrop {
   background: rgba(17, 39, 45, 0.4);
   backdrop-filter: blur(12px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .player-dialog::backdrop {
+    background: rgba(4, 9, 10, 0.68);
+  }
 }
 
 .player-shell {
@@ -463,5 +582,27 @@ select {
     height: 14px;
     padding: 0 2px;
     font-size: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-title {
+    font-size: 12px;
+  }
+
+  .meta-chip {
+    max-width: 46px;
+    font-size: 8px;
+  }
+
+  .tag-edit-button,
+  .text-button {
+    width: 30px;
+    min-width: 30px;
+    height: 16px;
   }
 }

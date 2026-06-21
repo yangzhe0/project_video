@@ -2,3 +2,4 @@
 /batch_centered_cropping
 video_processor/snapshots.json
 web_manager/cache/durations.json
+*.log
