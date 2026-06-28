@@ -962,7 +962,7 @@ class VideoProcessor:
             
             # 提取帧
             for i in range(num_frames):
-                timestamp = (i + 1) * frame_interval
+                timestamp = 0 if i == 0 else (i + 1) * frame_interval
                 
                 # 确保时间戳不超过视频长度
                 if timestamp >= duration:
