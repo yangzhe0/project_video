@@ -60,6 +60,7 @@ app = Flask(
 
 VIDEO_EXTENSIONS = {".mp4"}
 THUMB_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
+SERIES_FOLDER_SUFFIX = "系列"
 DEFAULT_PAGE_SIZE = 24
 MAX_PAGE_SIZE = 60
 CACHE_TTL_SECONDS = 10
@@ -252,6 +253,19 @@ def build_thumbnail_path(video_path: Path) -> Path | None:
     return None
 
 
+def iter_series_video_paths():
+    """遍历资源库第一层中以“系列”结尾的文件夹内的视频。"""
+    if not MEDIA_DIR.exists():
+        return
+
+    for folder in MEDIA_DIR.iterdir():
+        if not folder.is_dir() or not folder.name.endswith(SERIES_FOLDER_SUFFIX):
+            continue
+        for path in folder.rglob("*"):
+            if path.is_file() and path.suffix.lower() in VIDEO_EXTENSIONS:
+                yield path
+
+
 def scan_videos() -> list[dict[str, object]]:
     now = time.time()
     if _VIDEO_CACHE["items"] and now < float(_VIDEO_CACHE["expires_at"]):
@@ -263,10 +277,7 @@ def scan_videos() -> list[dict[str, object]]:
     items: list[dict[str, object]] = []
     duration_cache = load_duration_cache()
 
-    for path in MEDIA_DIR.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in VIDEO_EXTENSIONS:
-            continue
-
+    for path in iter_series_video_paths():
         stat = path.stat()
         relative_path = path.relative_to(MEDIA_DIR).as_posix()
         thumbnail_path = build_thumbnail_path(path)
@@ -312,8 +323,6 @@ def paginate(items: list[dict[str, object]], page: int, page_size: int) -> dict[
 def sort_videos(items: list[dict[str, object]], sort_key: str, random_seed: str = "") -> list[dict[str, object]]:
     if sort_key == "name":
         return sorted(items, key=lambda item: (sortable_name(item), str(item["name"]).casefold()))
-    if sort_key == "size":
-        return sorted(items, key=lambda item: (int(item["size"]), str(item["name"]).casefold()), reverse=True)
     if sort_key == "duration":
         return sorted(items, key=lambda item: (float(item.get("duration", 0.0)), str(item["name"]).casefold()), reverse=True)
     if sort_key == "random":
@@ -340,7 +349,17 @@ def resolve_media_path(relative_path: str) -> Path | None:
     safe_path = safe_join(str(MEDIA_DIR), relative_path)
     if safe_path is None:
         return None
-    return Path(safe_path)
+
+    path = Path(safe_path)
+    try:
+        first_folder = path.relative_to(MEDIA_DIR).parts[0]
+    except (ValueError, IndexError):
+        return None
+
+    series_root = MEDIA_DIR / first_folder
+    if not first_folder.endswith(SERIES_FOLDER_SUFFIX) or not series_root.is_dir():
+        return None
+    return path
 
 
 def resolve_delete_path(relative_path: str) -> Path | None:
@@ -415,9 +434,7 @@ def rebuild_durations():
         failed: list[str] = []
         total = 0
 
-        for path in MEDIA_DIR.rglob("*"):
-            if not path.is_file() or path.suffix.lower() not in VIDEO_EXTENSIONS:
-                continue
+        for path in iter_series_video_paths():
             total += 1
             relative_path = path.relative_to(MEDIA_DIR).as_posix()
             try:

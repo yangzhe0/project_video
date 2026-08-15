@@ -13,6 +13,8 @@ import time
 from datetime import datetime
 
 class VideoProcessor:
+    SERIES_FOLDER_SUFFIX = "系列"
+
     def __init__(self, root):
         self.root = root
         self.root.title("Video Processor")
@@ -405,17 +407,37 @@ class VideoProcessor:
     def normalize_snapshot_root(self, directory):
         return os.path.normcase(os.path.abspath(os.path.normpath(directory)))
 
+    def get_series_roots(self, directory):
+        """返回所选目录自身或其第一层中以“系列”结尾的文件夹。"""
+        directory = os.path.abspath(os.path.normpath(directory))
+        if not os.path.isdir(directory):
+            return []
+
+        if os.path.basename(directory).endswith(self.SERIES_FOLDER_SUFFIX):
+            return [directory]
+
+        try:
+            roots = [
+                entry.path
+                for entry in os.scandir(directory)
+                if entry.is_dir() and entry.name.endswith(self.SERIES_FOLDER_SUFFIX)
+            ]
+        except OSError:
+            return []
+        return sorted(roots, key=lambda path: path.casefold())
+
     def scan_directory_snapshot(self, directory):
         snapshot = {}
-        for root, _, files in os.walk(directory):
-            for file_name in files:
-                file_path = os.path.join(root, file_name)
-                try:
-                    stat = os.stat(file_path)
-                except OSError:
-                    continue
-                relative_path = os.path.relpath(file_path, directory).replace("\\", "/")
-                snapshot[relative_path] = int(stat.st_size)
+        for series_root in self.get_series_roots(directory):
+            for root, _, files in os.walk(series_root):
+                for file_name in files:
+                    file_path = os.path.join(root, file_name)
+                    try:
+                        stat = os.stat(file_path)
+                    except OSError:
+                        continue
+                    relative_path = os.path.relpath(file_path, directory).replace("\\", "/")
+                    snapshot[relative_path] = int(stat.st_size)
         return dict(sorted(snapshot.items(), key=lambda item: item[0].casefold()))
 
     def load_snapshot_store(self):
@@ -511,7 +533,7 @@ class VideoProcessor:
         current_files = self.scan_directory_snapshot(directory)
         store = self.load_snapshot_store()
         snapshots = store.setdefault("snapshots", {})
-        snapshot_key = self.normalize_snapshot_root(directory)
+        snapshot_key = f"{self.normalize_snapshot_root(directory)}::series-folders"
         previous_entry = snapshots.get(snapshot_key, {})
         previous_files = previous_entry.get("files", {}) if isinstance(previous_entry, dict) else {}
         if not isinstance(previous_files, dict):
@@ -550,8 +572,8 @@ class VideoProcessor:
     def get_video_files(self, directory):
         video_extensions = ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm']
         video_files = []
-        if os.path.exists(directory):
-            for root, dirs, files in os.walk(directory):
+        for series_root in self.get_series_roots(directory):
+            for root, _, files in os.walk(series_root):
                 for file in files:
                     if any(file.lower().endswith(ext) for ext in video_extensions):
                         video_files.append(os.path.join(root, file))
@@ -572,10 +594,13 @@ class VideoProcessor:
         tag_directories = {}
         report_dir_name = "_归档报告"
 
-        for root, dirs, _ in os.walk(input_dir):
-            dirs[:] = [directory for directory in dirs if directory != report_dir_name]
-            for directory in dirs:
-                tag_directories.setdefault(directory, []).append(os.path.join(root, directory))
+        for series_root in self.get_series_roots(input_dir):
+            series_name = os.path.basename(series_root)
+            tag_directories.setdefault(series_name, []).append(series_root)
+            for root, dirs, _ in os.walk(series_root):
+                dirs[:] = [directory for directory in dirs if directory != report_dir_name]
+                for directory in dirs:
+                    tag_directories.setdefault(directory, []).append(os.path.join(root, directory))
 
         return tag_directories
 

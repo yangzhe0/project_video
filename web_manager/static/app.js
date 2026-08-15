@@ -34,10 +34,9 @@ let toastTimer = null;
 let playerGuardTimer = null;
 const SORT_OPTIONS = [
   { value: "time", label: "更新" },
-  { value: "name", label: "名称" },
-  { value: "size", label: "大小" },
-  { value: "duration", label: "片长" },
   { value: "random", label: "随机" },
+  { value: "name", label: "名称" },
+  { value: "duration", label: "片长" },
 ];
 
 function buildVideoRecord(item) {
