@@ -1,5 +1,5 @@
-/server_compress
-/batch_centered_cropping
+/PDF
+/视频处理
 video_processor/snapshots.json
 web_manager/cache/durations.json
 *.log
