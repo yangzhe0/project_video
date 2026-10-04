@@ -1,5 +1,8 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import messagebox, filedialog
+import ttkbootstrap as ttk
+import ttkbootstrap as tb
+from ttkbootstrap.constants import *
 import threading
 import subprocess
 import os
@@ -18,8 +21,8 @@ class VideoProcessor:
     def __init__(self, root):
         self.root = root
         self.root.title("Video Processor")
-        self.root.geometry("432x620")
-        self.root.minsize(420, 560)
+        self.root.geometry("620x920")
+        self.root.minsize(680, 620)
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.drive_root = os.path.dirname(self.base_dir)
         self.root_config_path = os.path.join(self.drive_root, "配置.json")
@@ -30,7 +33,6 @@ class VideoProcessor:
         self.config = {
             "paths": {
                 "input_dir": "../library",
-                "output_dir": "../library",
                 "thumbnail_dir": "../library"
             },
             "ffmpeg": {
@@ -67,7 +69,7 @@ class VideoProcessor:
         return os.path.normpath(os.path.join(self.base_dir, path))
 
     def ensure_default_dirs(self):
-        for key in ("input_dir", "output_dir", "thumbnail_dir"):
+        for key in ("input_dir", "thumbnail_dir"):
             os.makedirs(self.resolve_app_path(self.config["paths"][key]), exist_ok=True)
         os.makedirs(self.resolve_app_path(self.report_dir), exist_ok=True)
 
@@ -92,128 +94,12 @@ class VideoProcessor:
         root_config = self.load_root_config()
         library_dir = root_config.get("资源库", "./library")
         self.config["paths"]["input_dir"] = self.resolve_root_path(library_dir)
-        self.config["paths"]["output_dir"] = self.resolve_root_path(library_dir)
         self.config["paths"]["thumbnail_dir"] = self.resolve_root_path(library_dir)
         self.report_dir = self.resolve_root_path(root_config.get("报告", "./reports"))
 
     def setup_styles(self):
-        self.colors = {
-            "bg": "#f6f7fb",
-            "panel": "#ffffff",
-            "panel_alt": "#f8fafd",
-            "text": "#1f2937",
-            "muted": "#667085",
-            "line": "#d7deea",
-            "accent": "#2563eb",
-            "accent_hover": "#1d4ed8",
-        }
-
-        self.root.configure(bg=self.colors["bg"])
-        style = ttk.Style()
-        try:
-            style.theme_use("clam")
-        except tk.TclError:
-            pass
-
-        default_font = ("Microsoft YaHei UI", 9)
-        section_font = ("Microsoft YaHei UI", 10, "bold")
-        button_font = ("Microsoft YaHei UI", 9, "bold")
-
-        style.configure(".", font=default_font)
-        style.configure("App.TFrame", background=self.colors["bg"])
-        style.configure("Panel.TFrame", background=self.colors["panel"])
-        style.configure("Toolbar.TFrame", background=self.colors["panel_alt"])
-        style.configure("ToolTitle.TLabel", background=self.colors["panel_alt"], foreground=self.colors["text"], font=("Microsoft YaHei UI", 10, "bold"))
-        style.configure("Hint.TLabel", background=self.colors["panel_alt"], foreground=self.colors["muted"], font=("Microsoft YaHei UI", 9))
-        style.configure(
-            "Subtitle.TLabel",
-            background=self.colors["bg"],
-            foreground=self.colors["muted"],
-            font=("Microsoft YaHei UI", 10),
-        )
-        style.configure(
-            "Section.TLabelframe",
-            background=self.colors["panel"],
-            borderwidth=1,
-            relief="solid",
-        )
-        style.configure(
-            "Section.TLabelframe.Label",
-            background=self.colors["panel"],
-            foreground=self.colors["text"],
-            font=section_font,
-        )
-        style.configure(
-            "TLabel",
-            background=self.colors["panel"],
-            foreground=self.colors["text"],
-        )
-        style.configure(
-            "Muted.TLabel",
-            background=self.colors["panel"],
-            foreground=self.colors["muted"],
-        )
-        style.configure(
-            "TEntry",
-            fieldbackground="#ffffff",
-            bordercolor=self.colors["line"],
-            lightcolor=self.colors["line"],
-            darkcolor=self.colors["line"],
-            padding=6,
-        )
-        style.configure(
-            "TCheckbutton",
-            background=self.colors["panel_alt"],
-            foreground=self.colors["text"],
-        )
-        style.configure(
-            "TProgressbar",
-            troughcolor="#e5e7eb",
-            background=self.colors["accent"],
-            bordercolor="#e5e7eb",
-            lightcolor=self.colors["accent"],
-            darkcolor=self.colors["accent"],
-            thickness=10,
-        )
-        style.configure(
-            "Action.TButton",
-            font=button_font,
-            padding=(7, 5),
-            background=self.colors["panel_alt"],
-            foreground=self.colors["text"],
-            bordercolor=self.colors["line"],
-        )
-        style.map(
-            "Action.TButton",
-            background=[("active", "#eef3ff")],
-            bordercolor=[("active", "#bfd1ff")],
-        )
-        style.configure(
-            "Primary.TButton",
-            font=button_font,
-            padding=(7, 5),
-            background=self.colors["accent"],
-            foreground="#ffffff",
-            bordercolor=self.colors["accent"],
-        )
-        style.map(
-            "Primary.TButton",
-            background=[("active", self.colors["accent_hover"])],
-            bordercolor=[("active", self.colors["accent_hover"])],
-        )
-        style.configure(
-            "Danger.TButton",
-            font=button_font,
-            padding=(7, 5),
-            background="#fff1f2",
-            foreground="#b42318",
-            bordercolor="#fecdd3",
-        )
-        style.map(
-            "Danger.TButton",
-            background=[("active", "#ffe4e6")],
-            bordercolor=[("active", "#fda4af")],
-        )
+        # ttkbootstrap 负责全局主题和控件样式。
+        self.colors = {"bg": "#f6f7fb", "panel": "#ffffff", "text": "#1f2937", "muted": "#667085"}
 
     def load_config(self):
         try:
@@ -253,132 +139,74 @@ class VideoProcessor:
             self.log_message("请确保已安装FFmpeg并添加到系统PATH环境变量中")
     
     def create_widgets(self):
-        main_frame = ttk.Frame(self.root, padding="8 8 8 8", style="App.TFrame")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-        self.create_path_section(main_frame, 0)
-        self.create_tools_section(main_frame, 1)
-        
-        self.progress = ttk.Progressbar(main_frame, mode='indeterminate')
-        self.progress.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(1, 4))
-        
-        self.status_label = ttk.Label(main_frame, text="就绪", style="Subtitle.TLabel")
-        self.status_label.grid(row=3, column=0, columnspan=3, sticky=tk.W, pady=(0, 3))
-        
-        log_frame = ttk.LabelFrame(main_frame, text="运行日志", padding="5", style="Section.TLabelframe")
-        log_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(3, 0))
-        
-        self.log_text = tk.Text(
-            log_frame,
-            height=15,
-            width=80,
-            bg="#111827",
-            fg="#e5eefc",
-            insertbackground="#e5eefc",
-            relief="flat",
-            bd=0,
-            padx=6,
-            pady=6,
-            font=("Consolas", 10),
-        )
-        scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_text.yview)
-        self.log_text.configure(yscrollcommand=scrollbar.set)
-        
-        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
-        
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(4, weight=1)
-        log_frame.columnconfigure(0, weight=1)
-        log_frame.rowconfigure(0, weight=1)
-    
+        shell = ttk.Frame(self.root, padding=18)
+        shell.grid(row=0, column=0, sticky=NSEW)
+        shell.columnconfigure(0, weight=1)
+        shell.rowconfigure(3, weight=1)
+
+        header = ttk.Frame(shell)
+        header.grid(row=0, column=0, sticky=EW, pady=(0, 16))
+        header.columnconfigure(0, weight=1)
+        ttk.Label(header, text="视频处理工作台", font=("Microsoft YaHei UI", 22, "bold"), bootstyle="primary").grid(row=0, column=0, sticky=W)
+        ttk.Label(header, text="缩略图 · 快照 · 归档", font=("Microsoft YaHei UI", 10), bootstyle="secondary").grid(row=1, column=0, sticky=W, pady=(3, 0))
+        self.status_label = ttk.Label(header, text="就绪", bootstyle="success", padding=(10, 4))
+        self.status_label.grid(row=0, column=1, rowspan=2, sticky=E)
+
+        self.create_path_section(shell, 1)
+        self.create_tools_section(shell, 2)
+
+        log_card = ttk.LabelFrame(shell, text="运行日志", padding=10, bootstyle="secondary")
+        log_card.grid(row=3, column=0, sticky=NSEW, pady=(0, 8))
+        log_card.columnconfigure(0, weight=1); log_card.rowconfigure(1, weight=1)
+        self.progress = ttk.Progressbar(log_card, mode='indeterminate', bootstyle="info-striped")
+        self.progress.grid(row=0, column=0, sticky=EW, pady=(0, 8))
+        self.log_text = tk.Text(log_card, height=14, bg="#172033", fg="#e6edf7", insertbackground="#ffffff", relief="flat", bd=0, padx=10, pady=8, font=("Consolas", 10))
+        scrollbar = ttk.Scrollbar(log_card, orient="vertical", command=self.log_text.yview, bootstyle="round")
+        self.log_text.configure(yscrollcommand=scrollbar.set)
+        self.log_text.grid(row=1, column=0, sticky=NSEW); scrollbar.grid(row=1, column=1, sticky=NS)
+        ttk.Label(shell, text="提示：处理前请确认输入目录；勾选“覆盖”后会替换已存在结果。", bootstyle="secondary").grid(row=4, column=0, sticky=W)
+
     def create_path_section(self, parent, row):
-        frame = ttk.LabelFrame(parent, text="路径设置", padding="4", style="Section.TLabelframe")
-        frame.grid(row=row, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 4))
-        
-        ttk.Label(frame, text="输入目录:").grid(row=0, column=0, padx=5, sticky=tk.W)
+        card = ttk.LabelFrame(parent, text=" 目录设置 ", padding=14, bootstyle="primary")
+        card.grid(row=row, column=0, sticky=EW, pady=(0, 12))
+        card.columnconfigure(1, weight=1)
+        ttk.Label(card, text="输入目录", bootstyle="secondary").grid(row=0, column=0, padx=(0, 10), pady=6, sticky=W)
         self.input_path_var = tk.StringVar(value=self.config['paths']['input_dir'])
-        ttk.Entry(frame, textvariable=self.input_path_var, width=28).grid(row=0, column=1, padx=4, pady=0, sticky=(tk.W, tk.E))
-        ttk.Button(frame, text="浏览", command=self.browse_input_path, style="Action.TButton").grid(row=0, column=2, padx=3, pady=1)
-        
-        ttk.Label(frame, text="输出目录:").grid(row=1, column=0, padx=5, sticky=tk.W)
-        self.output_path_var = tk.StringVar(value=self.config['paths']['output_dir'])
-        ttk.Entry(frame, textvariable=self.output_path_var, width=28).grid(row=1, column=1, padx=4, pady=0, sticky=(tk.W, tk.E))
-        ttk.Button(frame, text="浏览", command=self.browse_output_path, style="Action.TButton").grid(row=1, column=2, padx=3, pady=1)
-        
-        ttk.Label(frame, text="缩略图目录:").grid(row=2, column=0, padx=5, sticky=tk.W)
+        ttk.Entry(card, textvariable=self.input_path_var).grid(row=0, column=1, padx=6, pady=6, sticky=EW)
+        ttk.Button(card, text="浏览", command=self.browse_input_path, bootstyle="outline-secondary").grid(row=0, column=2, padx=(6, 0), pady=6)
+        ttk.Label(card, text="缩略图目录", bootstyle="secondary").grid(row=1, column=0, padx=(0, 10), pady=6, sticky=W)
         self.thumbnail_path_var = tk.StringVar(value=self.config['paths']['thumbnail_dir'])
-        ttk.Entry(frame, textvariable=self.thumbnail_path_var, width=28).grid(row=2, column=1, padx=4, pady=0, sticky=(tk.W, tk.E))
-        ttk.Button(frame, text="浏览", command=self.browse_thumbnail_path, style="Action.TButton").grid(row=2, column=2, padx=3, pady=1)
-        
-        action_frame = ttk.Frame(frame, style="Panel.TFrame")
-        action_frame.grid(row=3, column=1, sticky=tk.W, padx=5, pady=(3, 0))
-        ttk.Button(action_frame, text="保存路径设置", command=self.save_paths, style="Primary.TButton").grid(row=0, column=0, sticky=tk.W)
-        ttk.Button(action_frame, text="生成快照清单", command=self.start_snapshot_check, style="Action.TButton").grid(row=0, column=1, sticky=tk.W, padx=(8, 0))
-        frame.columnconfigure(1, weight=1)
-    
+        ttk.Entry(card, textvariable=self.thumbnail_path_var).grid(row=1, column=1, padx=6, pady=6, sticky=EW)
+        ttk.Button(card, text="浏览", command=self.browse_thumbnail_path, bootstyle="outline-secondary").grid(row=1, column=2, padx=(6, 0), pady=6)
+        ttk.Button(card, text="保存路径设置", command=self.save_paths, bootstyle="primary").grid(row=2, column=1, padx=6, pady=(10, 0), sticky=W)
+
     def create_tools_section(self, parent, row):
-        frame = ttk.LabelFrame(parent, text="处理工具", padding="4", style="Section.TLabelframe")
-        frame.grid(row=row, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 4))
-
-        PADX, PADY = 3, 2
-        ENTRY_WIDTH = 4
-        BUTTON_WIDTH = 7
-
-        tools_grid = ttk.Frame(frame, style="Toolbar.TFrame", padding="6 4")
-        tools_grid.grid(row=0, column=0, sticky=(tk.W, tk.E))
-
-        def cell(parent_frame, row_index, column_index, sticky=tk.W):
-            holder = ttk.Frame(parent_frame, style="Toolbar.TFrame")
-            holder.grid(row=row_index, column=column_index, padx=PADX, pady=PADY, sticky=sticky)
-            return holder
-
-        ttk.Label(tools_grid, text="去广告", style="ToolTitle.TLabel").grid(row=0, column=0, padx=PADX, pady=PADY, sticky=tk.W)
-        ad_params = cell(tools_grid, 0, 1)
-        ttk.Label(ad_params, text="头").grid(row=0, column=0, padx=(0, 2), sticky=tk.W)
-        self.head_time_var = tk.StringVar(value="0")
-        ttk.Entry(ad_params, textvariable=self.head_time_var, width=ENTRY_WIDTH).grid(row=0, column=1, padx=(0, 6), sticky=tk.W)
-        ttk.Label(ad_params, text="尾").grid(row=0, column=2, padx=(0, 2), sticky=tk.W)
-        self.tail_time_var = tk.StringVar(value="0")
-        ttk.Entry(ad_params, textvariable=self.tail_time_var, width=ENTRY_WIDTH).grid(row=0, column=3, sticky=tk.W)
-        ttk.Button(tools_grid, text="去广告", width=BUTTON_WIDTH, command=self.start_remove_ads, style="Primary.TButton").grid(row=0, column=3, padx=PADX, pady=PADY, sticky=tk.E)
-
-        ttk.Label(tools_grid, text="缩略图", style="ToolTitle.TLabel").grid(row=1, column=0, padx=PADX, pady=PADY, sticky=tk.W)
-        ttk.Label(tools_grid, text="960x540", style="Hint.TLabel").grid(row=1, column=1, padx=PADX, pady=PADY, sticky=tk.W)
+        card = ttk.LabelFrame(parent, text=" 处理工具 ", padding=14, bootstyle="primary")
+        card.grid(row=row, column=0, sticky=EW, pady=(0, 12))
+        card.columnconfigure(1, weight=1); card.columnconfigure(4, weight=1)
+        thumb = ttk.Frame(card)
+        thumb.grid(row=0, column=0, columnspan=3, sticky=EW, padx=(0, 14))
+        ttk.Label(thumb, text="缩略图", font=("Microsoft YaHei UI", 11, "bold"), bootstyle="primary").grid(row=0, column=0, sticky=W)
+        ttk.Label(thumb, text="输出 960×540", bootstyle="secondary").grid(row=1, column=0, sticky=W, pady=(3, 0))
         self.show_info_header_var = tk.BooleanVar(value=self.config['thumbnail'].get('show_info_header', True))
-        ttk.Checkbutton(tools_grid, text="信息栏", variable=self.show_info_header_var).grid(row=1, column=2, padx=PADX, pady=PADY, sticky=tk.W)
-        ttk.Button(tools_grid, text="生成", width=BUTTON_WIDTH, command=self.start_generate_thumbnails, style="Primary.TButton").grid(row=1, column=3, padx=PADX, pady=PADY, sticky=tk.E)
-
-        ttk.Label(tools_grid, text="视频裁剪", style="ToolTitle.TLabel").grid(row=2, column=0, padx=PADX, pady=PADY, sticky=tk.W)
-        crop_params = cell(tools_grid, 2, 1)
-        ttk.Label(crop_params, text="宽").grid(row=0, column=0, padx=(0, 2), sticky=tk.W)
-        self.crop_width_var = tk.StringVar(value="268")
-        ttk.Entry(crop_params, textvariable=self.crop_width_var, width=ENTRY_WIDTH).grid(row=0, column=1, padx=(0, 6), sticky=tk.W)
-        ttk.Label(crop_params, text="高").grid(row=0, column=2, padx=(0, 2), sticky=tk.W)
-        self.crop_height_var = tk.StringVar(value="480")
-        ttk.Entry(crop_params, textvariable=self.crop_height_var, width=ENTRY_WIDTH).grid(row=0, column=3, sticky=tk.W)
-        ttk.Button(tools_grid, text="裁剪", width=BUTTON_WIDTH, command=self.start_crop_videos, style="Primary.TButton").grid(row=2, column=3, padx=PADX, pady=PADY, sticky=tk.E)
-
-        ttk.Label(tools_grid, text="设置", style="ToolTitle.TLabel").grid(row=3, column=0, padx=PADX, pady=PADY, sticky=tk.W)
-        settings_params = cell(tools_grid, 3, 1)
-        ttk.Label(settings_params, text="线程").grid(row=0, column=0, padx=(0, 2), sticky=tk.W)
+        ttk.Checkbutton(thumb, text="显示信息栏", variable=self.show_info_header_var, bootstyle="round-toggle").grid(row=2, column=0, sticky=W, pady=(10, 0))
+        ttk.Button(thumb, text="生成缩略图", command=self.start_generate_thumbnails, bootstyle="success").grid(row=0, column=1, rowspan=3, padx=(28, 0), sticky=E)
+        ttk.Separator(card, orient=VERTICAL).grid(row=0, column=3, rowspan=2, sticky=NS, padx=12)
+        settings = ttk.Frame(card)
+        settings.grid(row=0, column=4, columnspan=2, sticky=EW)
+        ttk.Label(settings, text="运行设置", font=("Microsoft YaHei UI", 11, "bold"), bootstyle="primary").grid(row=0, column=0, columnspan=2, sticky=W)
+        ttk.Label(settings, text="线程数", bootstyle="secondary").grid(row=1, column=0, sticky=W, pady=(10, 0))
         self.thread_count_var = tk.StringVar(value=str(self.config['processing']['max_workers']))
-        ttk.Entry(settings_params, textvariable=self.thread_count_var, width=ENTRY_WIDTH).grid(row=0, column=1, padx=(0, 8), sticky=tk.W)
-        
+        ttk.Entry(settings, textvariable=self.thread_count_var, width=7).grid(row=1, column=1, sticky=W, padx=(10, 0), pady=(10, 0))
         self.overwrite_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(settings_params, text="覆盖", variable=self.overwrite_var).grid(row=0, column=2, sticky=tk.W)
-        
-        ttk.Button(tools_grid, text="停止", width=BUTTON_WIDTH, command=self.stop_processing, style="Danger.TButton").grid(row=3, column=2, padx=PADX, pady=PADY, sticky=tk.E)
-        ttk.Button(tools_grid, text="归档", width=BUTTON_WIDTH, command=self.start_organize_by_tag, style="Action.TButton").grid(row=3, column=3, padx=PADX, pady=PADY, sticky=tk.E)
+        ttk.Checkbutton(settings, text="覆盖已存在文件", variable=self.overwrite_var, bootstyle="round-toggle").grid(row=2, column=0, columnspan=2, sticky=W, pady=(10, 0))
+        actions = ttk.Frame(card)
+        actions.grid(row=1, column=0, columnspan=6, sticky=EW, pady=(16, 0))
+        ttk.Button(actions, text="生成快照清单", command=self.start_snapshot_check, bootstyle="info-outline").pack(side=LEFT)
+        ttk.Button(actions, text="归档", command=self.start_organize_by_tag, bootstyle="secondary-outline").pack(side=LEFT, padx=(10, 0))
 
-        frame.columnconfigure(0, weight=1)
-        tools_grid.columnconfigure(0, minsize=66, weight=0)
-        tools_grid.columnconfigure(1, minsize=126, weight=0)
-        tools_grid.columnconfigure(2, minsize=72, weight=0)
-        tools_grid.columnconfigure(3, weight=1)
-    
     def browse_input_path(self):
         path = filedialog.askdirectory(title="选择输入目录")
         if path:
@@ -396,7 +224,6 @@ class VideoProcessor:
     
     def save_paths(self):
         self.config['paths']['input_dir'] = self.input_path_var.get()
-        self.config['paths']['output_dir'] = self.output_path_var.get()
         self.config['paths']['thumbnail_dir'] = self.thumbnail_path_var.get()
         self.save_config()
         messagebox.showinfo("成功", "路径设置已保存")
@@ -880,69 +707,7 @@ class VideoProcessor:
         s = int(seconds % 60)
         return f"{h:02d}:{m:02d}:{s:02d}"
     
-    def remove_ads_single(self, file_path, head_time, tail_time):
-        try:
-            file_path = os.path.normpath(file_path)
-            
-            duration = self.get_video_info(file_path)
-            if not duration:
-                return False, f"无法获取视频时长: {os.path.basename(file_path)}"
-            
-            input_dir = os.path.normpath(self.config['paths']['input_dir'])
-            output_dir = os.path.normpath(self.config['paths']['output_dir'])
-            relative_path = os.path.relpath(file_path, input_dir)
-            output_path = os.path.normpath(os.path.join(output_dir, relative_path))
-            
-            # 检查是否覆盖
-            if not self.overwrite_var.get() and os.path.exists(output_path):
-                return True, f"跳过已存在文件: {os.path.basename(file_path)}"
-            
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            
-            end_duration = duration - head_time - tail_time
-            if end_duration <= 0:
-                return False, f"处理失败: {os.path.basename(file_path)} - 去除时长后剩余时长不大于 0"
 
-            start_time = f"{head_time:.3f}"
-            trim_duration = f"{end_duration:.3f}"
-            temp_output_path = output_path
-            replace_original = False
-
-            if os.path.normcase(os.path.abspath(file_path)) == os.path.normcase(os.path.abspath(output_path)):
-                temp_output_path = os.path.join(
-                    os.path.dirname(output_path),
-                    f"{os.path.splitext(os.path.basename(output_path))[0]}.__trim_tmp__{os.path.splitext(output_path)[1]}",
-                )
-                replace_original = True
-                if os.path.exists(temp_output_path):
-                    os.remove(temp_output_path)
-            
-            command = [
-                self.resolve_app_path(self.config['ffmpeg']['executable']), '-y',
-                '-fflags', '+genpts',
-                '-ss', start_time,
-                '-i', file_path,
-                '-t', trim_duration,
-                '-map', '0',
-                '-c', 'copy',
-                '-movflags', '+faststart',
-                '-avoid_negative_ts', 'make_zero',
-                temp_output_path,
-            ]
-            
-            result = subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if result == 0:
-                if replace_original:
-                    os.replace(temp_output_path, output_path)
-                return True, f"成功处理: {os.path.basename(file_path)}"
-            else:
-                if replace_original and os.path.exists(temp_output_path):
-                    os.remove(temp_output_path)
-                return False, f"处理失败: {os.path.basename(file_path)}"
-                
-        except Exception as e:
-            return False, f"处理异常: {os.path.basename(file_path)} - {e}"
-    
     def generate_thumbnail_single(self, file_path):
         import uuid
         import threading
@@ -1190,75 +955,8 @@ class VideoProcessor:
             self.log_message(traceback.format_exc())
             return False
     
-    def crop_video_single(self, file_path, width, height):
-        try:
-            file_path = os.path.normpath(file_path)
-            
-            input_dir = os.path.normpath(self.config['paths']['input_dir'])
-            output_dir = os.path.normpath(self.config['paths']['output_dir'])
-            relative_path = os.path.relpath(file_path, input_dir)
-            output_path = os.path.normpath(os.path.join(output_dir, relative_path))
-            
-            # 检查是否覆盖
-            if not self.overwrite_var.get() and os.path.exists(output_path):
-                return True, f"跳过已存在文件: {os.path.basename(file_path)}"
-            
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            
-            command = [
-                self.resolve_app_path(self.config['ffmpeg']['executable']), '-y',
-                '-i', file_path,
-                '-vf', f'crop={width}:{height}',
-                '-c:a', 'copy',
-                output_path
-            ]
-            
-            result = subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if result == 0:
-                return True, f"成功裁剪: {os.path.basename(file_path)}"
-            else:
-                return False, f"裁剪失败: {os.path.basename(file_path)}"
-                
-        except Exception as e:
-            return False, f"裁剪异常: {os.path.basename(file_path)} - {e}"
-    
-    def start_remove_ads(self):
-        if self.is_processing:
-            messagebox.showwarning("警告", "正在处理中，请等待完成")
-            return
-        
-        try:
-            head_time = float(self.head_time_var.get())
-            tail_time = float(self.tail_time_var.get())
-        except ValueError:
-            messagebox.showerror("错误", "请输入有效的数字")
-            return
-        
-        self.config['paths']['input_dir'] = self.input_path_var.get()
-        self.config['paths']['output_dir'] = self.output_path_var.get()
-        
-        video_files = self.get_video_files(self.config['paths']['input_dir'])
-        if not video_files:
-            messagebox.showerror("错误", f"在输入目录中未找到视频文件: {self.config['paths']['input_dir']}")
-            return
-        
-        try:
-            max_workers = int(self.thread_count_var.get())
-            if max_workers <= 0:
-                max_workers = 1
-        except ValueError:
-            max_workers = multiprocessing.cpu_count()
-        
-        self.is_processing = True
-        self.progress.start()
-        self.status_label.config(text="正在去广告...")
-        self.log_message(f"开始去广告，共{len(video_files)}个文件，使用{max_workers}个线程")
-        
-        thread = threading.Thread(target=self.process_videos, 
-                                args=(video_files, self.remove_ads_single, (head_time, tail_time), max_workers, "去广告"))
-        thread.daemon = True
-        thread.start()
-    
+
+
     def start_generate_thumbnails(self):
         if self.is_processing:
             messagebox.showwarning("警告", "正在处理中，请等待完成")
@@ -1291,42 +989,6 @@ class VideoProcessor:
         thread.daemon = True
         thread.start()
     
-    def start_crop_videos(self):
-        if self.is_processing:
-            messagebox.showwarning("警告", "正在处理中，请等待完成")
-            return
-        
-        try:
-            width = int(self.crop_width_var.get())
-            height = int(self.crop_height_var.get())
-        except ValueError:
-            messagebox.showerror("错误", "请输入有效的数字")
-            return
-        
-        self.config['paths']['input_dir'] = self.input_path_var.get()
-        self.config['paths']['output_dir'] = self.output_path_var.get()
-        
-        video_files = self.get_video_files(self.config['paths']['input_dir'])
-        if not video_files:
-            messagebox.showerror("错误", f"在输入目录中未找到视频文件: {self.config['paths']['input_dir']}")
-            return
-        
-        try:
-            max_workers = int(self.thread_count_var.get())
-            if max_workers <= 0:
-                max_workers = 1
-        except ValueError:
-            max_workers = multiprocessing.cpu_count()
-        
-        self.is_processing = True
-        self.progress.start()
-        self.status_label.config(text="正在裁剪视频...")
-        self.log_message(f"开始裁剪，共{len(video_files)}个文件，使用{max_workers}个线程")
-        
-        thread = threading.Thread(target=self.process_videos, 
-                                args=(video_files, self.crop_video_single, (width, height), max_workers, "裁剪"))
-        thread.daemon = True
-        thread.start()
 
     def start_organize_by_tag(self):
         if self.is_processing:
@@ -1412,15 +1074,9 @@ class VideoProcessor:
             self.status_label.config(text="就绪")
             self.log_message(f"{task_name}完成，成功处理{success_count}/{total_count}个文件")
     
-    def stop_processing(self):
-        if self.is_processing:
-            self.is_processing = False
-            self.log_message("用户停止了处理")
-        else:
-            messagebox.showinfo("提示", "当前没有正在处理的任务")
 
 def main():
-    root = tk.Tk()
+    root = tb.Window(themename="flatly")
     app = VideoProcessor(root)
     root.mainloop()
 

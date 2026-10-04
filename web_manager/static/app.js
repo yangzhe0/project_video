@@ -32,6 +32,8 @@ const elements = {
 
 let toastTimer = null;
 let playerGuardTimer = null;
+let currentVideoPath = null;
+let switchingVideo = false;
 const SORT_OPTIONS = [
   { value: "time", label: "更新" },
   { value: "random", label: "随机" },
@@ -224,6 +226,7 @@ function buildRenamedPath(video, nextStem) {
 }
 
 function applyVideoUpdate(previousPath, updatedVideo) {
+  if (currentVideoPath === previousPath) currentVideoPath = updatedVideo.path;
   const index = state.items.findIndex((item) => item.path === previousPath);
   if (index >= 0) {
     state.items[index] = updatedVideo;
@@ -483,6 +486,7 @@ async function reloadVideosPreservingScroll() {
 }
 
 function openPlayer(video, title) {
+  currentVideoPath = video.path;
   if (playerGuardTimer) {
     window.clearTimeout(playerGuardTimer);
     playerGuardTimer = null;
@@ -515,7 +519,7 @@ function openPlayer(video, title) {
   elements.player.load();
   elements.playerTitle.textContent = title;
   elements.playerSubtitle.textContent = `${video.category} · ${formatSize(video.size)} · ${formatDuration(video.duration)}`;
-  elements.dialog.showModal();
+  if (!elements.dialog.open) elements.dialog.showModal();
 
   playerGuardTimer = window.setTimeout(() => {
     handlePlayError();
@@ -530,6 +534,7 @@ function openPlayer(video, title) {
 }
 
 function closePlayer(skipClose = false) {
+  currentVideoPath = null;
   if (playerGuardTimer) {
     window.clearTimeout(playerGuardTimer);
     playerGuardTimer = null;
@@ -676,6 +681,49 @@ elements.loadMore.addEventListener("click", async () => {
   await loadVideos();
 });
 
+async function switchPlayerVideo(direction) {
+  if (switchingVideo || !elements.dialog.open || !currentVideoPath) return;
+  switchingVideo = true;
+  const previousPath = currentVideoPath;
+  try {
+    let index = state.items.findIndex((item) => item.path === previousPath);
+    if (index < 0) return;
+    if (direction > 0 && index + 1 >= state.items.length && state.hasMore) {
+      if (state.loading) {
+        showToast("列表正在加载，请稍后再试");
+        return;
+      }
+      const previousPage = state.page;
+      const previousCount = state.items.length;
+      state.page += 1;
+      await loadVideos();
+      if (state.items.length === previousCount) state.page = previousPage;
+    }
+    if (!elements.dialog.open || currentVideoPath !== previousPath) return;
+    index = state.items.findIndex((item) => item.path === previousPath);
+    if (index < 0) return;
+    const next = state.items[index + direction];
+    if (!next) {
+      showToast(direction < 0 ? "已经是第一个视频" : state.hasMore ? "下一页加载失败，请重试" : "已经是最后一个视频");
+      return;
+    }
+    openPlayer(next, cleanName(next) || next.name);
+  } finally {
+    switchingVideo = false;
+  }
+}
+
+document.addEventListener("keydown", (event) => {
+  if (!elements.dialog.open || !event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+  if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+  if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  if (event.repeat) return;
+  elements.player.dispatchEvent(new Event("playernavigate"));
+  void switchPlayerVideo(event.key === "ArrowRight" ? 1 : -1);
+}, true);
+
 elements.closePlayer.addEventListener("click", () => closePlayer());
 elements.dialog.addEventListener("click", (event) => {
   if (event.target === elements.dialog) {
@@ -691,3 +739,4 @@ async function init() {
 }
 
 init();
+import("./player-seek.js").catch((error) => console.error("播放器快捷键加载失败", error));
